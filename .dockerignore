@@ -1,0 +1,8 @@
+node_modules
+.yarn
+docker-compose.yml
+.dockerignore
+.git
+.vscode
+.devcontainer
+.env
