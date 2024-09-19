@@ -1,0 +1,20 @@
+{
+  "name": "cal.com dev environment",
+  "dockerFile": "Dockerfile",  // Your existing Dockerfile
+  "context": "..",
+  "appPort": [3000, 4000],     // Ports to expose for the frontend and backend
+  "postCreateCommand": "yarn install && yarn dev",  // Installs dependencies and starts the dev server
+  "forwardPorts": [3000, 4000],  // Forward ports for the frontend and backend
+  "remoteEnv": {
+    "DATABASE_URL": "${localEnv:DATABASE_URL}",  // Pull from local environment for Codespaces
+    "NEXTAUTH_SECRET": "${localEnv:NEXTAUTH_SECRET}",
+    "CALENDSO_ENCRYPTION_KEY": "${localEnv:CALENDSO_ENCRYPTION_KEY}"
+  },
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    }
+  }
+}
