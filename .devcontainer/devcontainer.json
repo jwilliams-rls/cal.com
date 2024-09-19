@@ -3,7 +3,7 @@
   "dockerFile": "../Dockerfile",  // Assuming your Dockerfile is in the root directory of your repository
   "context": "..",
   "appPort": [3000, 4000],  // Exposes ports for the frontend (3000) and backend (4000)
-  "postCreateCommand": "yarn install && yarn dev",  // Installs dependencies and starts the dev server
+  "postCreateCommand": "yarn set version 3.4.1 && yarn install && yarn dev",  // Sets the correct yarn version and installs dependencies
   "forwardPorts": [3000, 4000],  // Forwards frontend and backend ports to be accessible from the browser
   "remoteEnv": {
     "DATABASE_URL": "${localEnv:DATABASE_URL}",  // Environment variables pulled from local environment
