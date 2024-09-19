@@ -1,0 +1,47 @@
+version: '3'
+services:
+  web:
+    build:
+      context: ./path/to/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://localhost:4000
+    networks:
+      - cal_network
+
+  backend:
+    build:
+      context: ./path/to/backend
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/caldb
+    networks:
+      - cal_network
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: caldb
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - cal_network
+
+networks:
+  cal_network:
+    driver: bridge
+
+volumes:
+  db_data:
