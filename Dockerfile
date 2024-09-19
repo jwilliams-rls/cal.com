@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy the package files
 COPY package.json yarn.lock ./
 
+# Set the correct version of Yarn to 3.4.1
+RUN yarn set version 3.4.1
+
 # Install the dependencies
 RUN yarn install
 
