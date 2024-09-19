@@ -1,41 +1,24 @@
-version: '3'
+version: '3.8'
+
 services:
-  web:
+  app:
     build:
-      context: ./path/to/frontend
+      context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
-    depends_on:
-      - backend
+      - "3000:3000"  # For the web frontend
+      - "4000:4000"  # For the backend API
     environment:
-      - REACT_APP_API_URL=http://localhost:4000
-    networks:
-      - cal_network
-
-  backend:
-    build:
-      context: ./path/to/backend
-      dockerfile: Dockerfile
-    ports:
-      - "4000:4000"
-    depends_on:
-      - db
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/caldb
-    networks:
-      - cal_network
-
-  db:
-    image: postgres:13
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: caldb
-    ports:
-      - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
+      - NEXT_PUBLIC_WEBAPP_URL=${NEXT_PUBLIC_WEBAPP_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_API_V2_URL=${NEXT_PUBLIC_API_V2_URL:-http://localhost:4000/api/v2}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - CALENDSO_ENCRYPTION_KEY=${CALENDSO_ENCRYPTION_KEY}
+      - POSTGRES_USER=${POSTGRES_USER:-doadmin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-your_password}
+      - POSTGRES_DB=${POSTGRES_DB:-rls_calcom_calendar}
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_HOST=${DATABASE_HOST}
+      - DATABASE_PORT=${DATABASE_PORT:-5432}
     networks:
       - cal_network
 
@@ -43,5 +26,3 @@ networks:
   cal_network:
     driver: bridge
 
-volumes:
-  db_data:
