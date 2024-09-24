@@ -4,13 +4,10 @@ FROM node:18-alpine
 # Set the working directory inside the container
 WORKDIR /app
 
-# Install the latest stable version of Yarn
-RUN npm install -g yarn
-
 # Copy the package.json and yarn.lock files to the working directory
 COPY package.json yarn.lock ./
 
-# Install dependencies using Yarn
+# Install dependencies using Yarn (already available globally in the container)
 RUN yarn install
 
 # Copy the rest of the application files to the container
