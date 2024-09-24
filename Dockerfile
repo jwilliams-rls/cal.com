@@ -4,10 +4,13 @@ FROM node:18-alpine
 # Set the working directory inside the container
 WORKDIR /app
 
+# Install the correct version of Yarn (v3.4.1)
+RUN npm install -g yarn@3.4.1
+
 # Copy the package.json and yarn.lock files to the working directory
 COPY package.json yarn.lock ./
 
-# Install Yarn dependencies
+# Install Yarn dependencies using the correct version
 RUN yarn install
 
 # Copy the rest of the application files to the container
@@ -19,6 +22,5 @@ EXPOSE 4000
 
 # Default command to run the application in development mode
 CMD ["yarn", "dev"]
-
 
 
