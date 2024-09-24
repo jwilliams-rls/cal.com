@@ -1,26 +1,23 @@
-# Use the official Node.js image.
+# Use the official Node.js image from Docker Hub (Alpine is lightweight and includes Yarn)
 FROM node:18-alpine
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and lock files for Yarn
+# Copy the package.json and yarn.lock files to the working directory
 COPY package.json yarn.lock ./
 
-# Set the correct version of Yarn to 3.4.1 (as per your configuration)
-RUN yarn set version 3.4.1
-
-# Install the project dependencies
+# Install Yarn dependencies
 RUN yarn install
 
-# Copy the remaining application files into the working directory
+# Copy the rest of the application files to the container
 COPY . .
 
-# Expose the ports for the frontend (3000) and backend API (4000)
+# Expose the necessary ports for frontend (3000) and backend API (4000)
 EXPOSE 3000
 EXPOSE 4000
 
-# Command to run the app in production mode. 
-# Change this to ["yarn", "dev"] if running in a development environment.
-CMD ["yarn", "start"]
+# Default command to run the application in development mode
+CMD ["yarn", "dev"]
+
 
