@@ -1,24 +1,26 @@
 # Use the official Node.js image.
 FROM node:18-alpine
 
-# Set the working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the package files
+# Copy package.json and lock files for Yarn
 COPY package.json yarn.lock ./
 
-# Set the correct version of Yarn to 3.4.1
+# Set the correct version of Yarn to 3.4.1 (as per your configuration)
 RUN yarn set version 3.4.1
 
-# Install the dependencies
+# Install the project dependencies
 RUN yarn install
 
-# Copy the remaining app files
+# Copy the remaining application files into the working directory
 COPY . .
 
-# Expose the ports for frontend and backend
+# Expose the ports for the frontend (3000) and backend API (4000)
 EXPOSE 3000
 EXPOSE 4000
 
-# Default command to run your app (change depending on the project setup)
-CMD ["yarn", "dev"]
+# Command to run the app in production mode. 
+# Change this to ["yarn", "dev"] if running in a development environment.
+CMD ["yarn", "start"]
+
