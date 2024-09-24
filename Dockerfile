@@ -1,26 +1,23 @@
-# Use the official Node.js image from Docker Hub
-FROM node:18-alpine
+# Use the official node image as a base image
+FROM node:16
 
-# Enable Corepack, which helps manage Yarn versions
-RUN corepack enable && corepack prepare yarn@3.4.1 --activate
-
-# Set the working directory inside the container
+# Set the working directory
 WORKDIR /app
 
-# Copy the package.json and yarn.lock files to the working directory
-COPY package.json yarn.lock ./
+# Copy package.json and lock files to the working directory
+COPY package*.json ./
+COPY yarn.lock ./
 
-# Install dependencies using Yarn 3.4.1
-RUN yarn install
+# Install dependencies based on the lock file
+# This ensures that the build process uses cached layers for node_modules
+RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else npm ci; fi
 
-# Copy the rest of the application files to the container
+# Copy the rest of your application code
 COPY . .
 
-# Expose the necessary ports for frontend (3000) and backend API (4000)
+# Expose the application port
 EXPOSE 3000
-EXPOSE 4000
 
-# Default command to run the application in development mode
-CMD ["yarn", "dev"]
-
+# Command to run your application
+CMD ["npm", "start"]
 
