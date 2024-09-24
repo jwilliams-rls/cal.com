@@ -1,23 +1,20 @@
-# Use the official node image as a base image
+# Use the official node image
 FROM node:16
 
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and lock files to the working directory
-COPY package*.json ./
-COPY yarn.lock ./
+# Copy package.json and yarn.lock for dependency installation
+COPY package.json yarn.lock ./
 
-# Install dependencies based on the lock file
-# This ensures that the build process uses cached layers for node_modules
-RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else npm ci; fi
+# Install dependencies with Yarn
+RUN yarn install --frozen-lockfile
 
-# Copy the rest of your application code
+# Copy the application code to the container
 COPY . .
 
-# Expose the application port
+# Expose the port
 EXPOSE 3000
 
-# Command to run your application
-CMD ["npm", "start"]
-
+# Run the application using Yarn
+CMD ["yarn", "start"]
