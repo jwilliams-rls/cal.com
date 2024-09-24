@@ -1,20 +1,21 @@
-# Use the official node image
-FROM node:16
+# Use Node.js 18.x as the base image
+FROM node:18
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and yarn.lock for dependency installation
+# Copy package.json and yarn.lock to the container
 COPY package.json yarn.lock ./
 
-# Install dependencies with Yarn
-RUN yarn install --frozen-lockfile
+# Install dependencies with the correct Yarn version
+RUN corepack enable && corepack prepare yarn@3.4.1 --activate
+RUN yarn install --immutable
 
-# Copy the application code to the container
+# Copy the rest of the application
 COPY . .
 
-# Expose the port
+# Expose the port the app runs on
 EXPOSE 3000
 
-# Run the application using Yarn
+# Start the app
 CMD ["yarn", "start"]
