@@ -1,16 +1,16 @@
-# Use the official Node.js image from Docker Hub (Alpine is lightweight and includes Yarn)
+# Use the official Node.js image from Docker Hub
 FROM node:18-alpine
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Install the correct version of Yarn (v3.4.1)
-RUN npm install -g yarn@3.4.1
+# Install the latest stable version of Yarn
+RUN npm install -g yarn
 
 # Copy the package.json and yarn.lock files to the working directory
 COPY package.json yarn.lock ./
 
-# Install Yarn dependencies using the correct version
+# Install dependencies using Yarn
 RUN yarn install
 
 # Copy the rest of the application files to the container
