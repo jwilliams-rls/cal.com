@@ -1,5 +1,3 @@
-"use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import classNames from "classnames";
 import { signIn } from "next-auth/react";
@@ -9,7 +7,7 @@ import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { SAMLLogin } from "@calcom/features/auth/SAMLLogin";
+import { SAMLogin } from "@calcom/features/auth/SAMLLogin";
 import { ErrorCode } from "@calcom/features/auth/lib/ErrorCode";
 import { HOSTED_CAL_FEATURES, WEBAPP_URL, WEBSITE_URL } from "@calcom/lib/constants";
 import { getSafeRedirectUrl } from "@calcom/lib/getSafeRedirectUrl";
@@ -42,6 +40,7 @@ interface LoginValues {
 const GoogleIcon = () => (
   <img className="text-subtle mr-2 h-4 w-4 dark:invert" src="/google-icon.svg" alt="" />
 );
+
 export default function Login({
   csrfToken,
   isGoogleLoginEnabled,
@@ -49,21 +48,17 @@ export default function Login({
   samlTenantID,
   samlProductID,
   totpEmail,
-}: // eslint-disable-next-line @typescript-eslint/ban-types
-inferSSRProps<typeof getServerSideProps> & WithNonceProps<{}>) {
+}: inferSSRProps<typeof getServerSideProps> & WithNonceProps) {
   const searchParams = useCompatSearchParams();
   const { t } = useLocale();
   const router = useRouter();
-  const formSchema = z
-    .object({
-      email: z
-        .string()
-        .min(1, `${t("error_required_field")}`)
-        .email(`${t("enter_valid_email")}`),
-      ...(!!totpEmail ? {} : { password: z.string().min(1, `${t("error_required_field")}`) }),
-    })
-    // Passthrough other fields like totpCode
-    .passthrough();
+  const formSchema = z.object({
+    email: z
+      .string()
+      .min(1, `${t("error_required_field")}`)
+      .email(`${t("enter_valid_email")}`),
+    password: z.string().min(1, `${t("error_required_field")}`),
+  });
   const methods = useForm<LoginValues>({ resolver: zodResolver(formSchema) });
   const { register, formState } = methods;
   const [twoFactorRequired, setTwoFactorRequired] = useState(!!totpEmail || false);
@@ -72,8 +67,7 @@ inferSSRProps<typeof getServerSideProps> & WithNonceProps<{}>) {
   const [lastUsed, setLastUsed] = useLastUsed();
 
   const errorMessages: { [key: string]: string } = {
-    // [ErrorCode.SecondFactorRequired]: t("2fa_enabled_instructions"),
-    // Don't leak information about whether an email is registered or not
+    [ErrorCode.SecondFactorRequired]: t("2fa_enabled_instructions"),
     [ErrorCode.IncorrectEmailPassword]: t("incorrect_email_password"),
     [ErrorCode.IncorrectTwoFactorCode]: `${t("incorrect_2fa_code")} ${t("please_try_again")}`,
     [ErrorCode.InternalServerError]: `${t("something_went_wrong")} ${t("please_try_again_and_contact_us")}`,
@@ -83,8 +77,7 @@ inferSSRProps<typeof getServerSideProps> & WithNonceProps<{}>) {
   const telemetry = useTelemetry();
 
   let callbackUrl = searchParams?.get("callbackUrl") || "";
-
-  if (/"\//.test(callbackUrl)) callbackUrl = callbackUrl.substring(1);
+  if (/^\/\//.test(callbackUrl)) callbackUrl = callbackUrl.substring(1);
 
   // If not absolute URL, make it absolute
   if (!/^https?:\/\//.test(callbackUrl)) {
@@ -92,7 +85,6 @@ inferSSRProps<typeof getServerSideProps> & WithNonceProps<{}>) {
   }
 
   const safeCallbackUrl = getSafeRedirectUrl(callbackUrl);
-
   callbackUrl = safeCallbackUrl || "";
 
   const LoginFooter = (
@@ -133,7 +125,7 @@ inferSSRProps<typeof getServerSideProps> & WithNonceProps<{}>) {
     </>
   );
 
-  const ExternalTotpFooter = (
+  const ExternalTopFooter = (
     <Button
       onClick={() => {
         window.location.replace("/");
@@ -179,102 +171,70 @@ inferSSRProps<typeof getServerSideProps> & WithNonceProps<{}>) {
     : isSAMLLoginEnabled && !isPending && data?.connectionExists;
 
   return (
-    <div className="dark:bg-brand dark:text-brand-contrast text-emphasis min-h-screen [--cal-brand-emphasis:#101010] [--cal-brand-subtle:#9CA3AF] [--cal-brand-text:white] [--cal-brand:#111827] dark:[--cal-brand-emphasis:#e1e1e1] dark:[--cal-brand-text:black] dark:[--cal-brand:white]">
-      <AuthContainer
-        title={t("login")}
-        description={t("login")}
-        showLogo
-        heading={twoFactorRequired ? t("2fa_code") : t("welcome_back")}
-        footerText={
-          twoFactorRequired
-            ? !totpEmail
-              ? TwoFactorFooter
-              : ExternalTotpFooter
-            : process.env.NEXT_PUBLIC_DISABLE_SIGNUP !== "true"
-            ? LoginFooter
-            : null
-        }>
+    <div className="dark:bg-brand dark:text-brand-contrast text-emphasis min-h-screen [-cal-brand-emphasis:#101010] [-cal-brand-subtle:#9CA3AF] [-cal-brand-text:white] dark:[-cal-brand-emphasis:#e1e1e1] dark:[-cal-brand-subtle:#f0f0f0]">
+      <AuthContainer footer={twoFactorRequired ? TwoFactorFooter : LoginFooter}>
         <FormProvider {...methods}>
-          <form onSubmit={methods.handleSubmit(onSubmit)} noValidate data-testid="login-form">
-            <div>
-              <input defaultValue={csrfToken || undefined} type="hidden" hidden {...register("csrfToken")} />
-            </div>
-            <div className="space-y-6">
-              <div className={classNames("space-y-6", { hidden: twoFactorRequired })}>
-                <EmailField
-                  id="email"
-                  label={t("email_address")}
-                  defaultValue={totpEmail || (searchParams?.get("email") as string)}
-                  placeholder="john.doe@example.com"
-                  required
-                  {...register("email")}
-                />
-                <div className="relative">
-                  <PasswordField
-                    id="password"
-                    autoComplete="off"
-                    required={!totpEmail}
-                    className="mb-0"
-                    {...register("password")}
-                  />
-                  <div className="absolute -top-[2px] ltr:right-0 rtl:left-0">
-                    <Link
-                      href="/auth/forgot-password"
-                      tabIndex={-1}
-                      className="text-default text-sm font-medium">
-                      {t("forgot")}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {twoFactorRequired ? !twoFactorLostAccess ? <TwoFactor center /> : <BackupCode center /> : null}
-
-              {errorMessage && <Alert severity="error" title={errorMessage} />}
-              <Button
-                type="submit"
-                color="primary"
-                disabled={formState.isSubmitting}
-                className="w-full justify-center">
-                <span>{twoFactorRequired ? t("submit") : t("sign_in")}</span>
-                {lastUsed === "credentials" && (
-                  <span className="absolute right-3 text-xs text-gray-600">{t("last_used")}</span>
-                )}
-              </Button>
-            </div>
+          {errorMessage && <Alert color="danger">{errorMessage}</Alert>}
+          <form
+            data-testid="form"
+            className={classNames("space-y-2", {
+              hidden: twoFactorRequired,
+            })}
+            onSubmit={methods.handleSubmit(onSubmit)}>
+            <input defaultValue={csrfToken || ""} type="hidden" hidden {...register("csrfToken")} />
+            <EmailField required data-testid="email" />
+            <PasswordField
+              data-testid="password"
+              disabled={formState.isSubmitting}
+              externalTopFooter={ExternalTopFooter}
+            />
+            <Button
+              type="submit"
+              className="w-full justify-center"
+              disabled={formState.isSubmitting}
+              data-testid="signin">
+              {t("sign_in")}
+              {lastUsed === "credentials" && <LastUsed />}
+            </Button>
           </form>
-          {!twoFactorRequired && (
+          {twoFactorRequired && (
             <>
-              {(isGoogleLoginEnabled || displaySSOLogin) && <hr className="border-subtle my-8" />}
-              <div className="space-y-3">
-                {isGoogleLoginEnabled && (
-                  <Button
-                    color="secondary"
-                    className="w-full justify-center"
-                    disabled={formState.isSubmitting}
-                    data-testid="google"
-                    CustomStartIcon={<GoogleIcon />}
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      const res = await signIn("google", {
-                        callbackUrl,
-                      });
-                      if (res && !res.error) {
-                        setLastUsed("google");
-                      }
-                    }}>
-                    <span>{t("signin_with_google")}</span>
-                    {lastUsed === "google" && <LastUsed />}
-                  </Button>
-                )}
-                {displaySSOLogin && (
-                  <SAMLLogin
-                    samlTenantID={samlTenantID}
-                    samlProductID={samlProductID}
-                    setErrorMessage={setErrorMessage}
-                  />
-                )}
-              </div>
+              {!twoFactorLostAccess ? (
+                <TwoFactor callbackUrl={callbackUrl} />
+              ) : (
+                <BackupCode callbackUrl={callbackUrl} />
+              )}
+            </>
+          )}
+          {!twoFactorRequired && (isGoogleLoginEnabled || displaySSOLogin) && (
+            <>
+              {isGoogleLoginEnabled && (
+                <Button
+                  color="secondary"
+                  className="w-full justify-center"
+                  disabled={formState.isSubmitting}
+                  data-testid="google"
+                  CustomStartIcon={<GoogleIcon />}
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    const res = await signIn("google", {
+                      callbackUrl,
+                    });
+                    if (res && !res.error) {
+                      setLastUsed("google");
+                    }
+                  }}>
+                  <span>{t("signin_with_google")}</span>
+                  {lastUsed === "google" && <LastUsed />}
+                </Button>
+              )}
+              {displaySSOLogin && (
+                <SAMLogin
+                  samlTenantID={samlTenantID}
+                  samlProductID={samlProductID}
+                  setErrorMessage={setErrorMessage}
+                />
+              )}
             </>
           )}
         </FormProvider>
